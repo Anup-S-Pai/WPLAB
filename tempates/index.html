@@ -1,0 +1,32 @@
+{% load static %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'images/site.webmanifest' %}">
+    <title>Travel Hub: {%block title%}{%endblock%}</title>
+    <link rel="stylesheet" href="{% static 'styles/index.css' %}">
+    <script src="{% static 'logics/package.js' %}" type="text/javascript"></script>
+    {% block jqueryOp %}{% endblock%}
+</head>
+<body>
+    <div class="container">
+        <header id="nav-container">
+            {% include 'travel/navbar.html' %}
+        </header>
+        <main>
+            {% block content %}
+            {% endblock %}
+        </main>
+    </div>
+    <footer class="footer-section">
+        <article>
+            &copy; CopyRight owned by NK and team 2025 WP LAB Project
+        </article>
+    </footer>
+</body>
+</html>

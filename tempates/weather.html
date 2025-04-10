@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tourist Weather Forecast</title>
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    .status-dot {
+      height: 15px;
+      width: 15px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+    .dot-green { background-color: #28a745; }
+    .dot-red { background-color: #dc3545; }
+    .forecast-tile {
+      flex: 0 0 auto;
+      margin-right: 15px;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-radius: 5px;
+      padding: 15px;
+      background: #fff;
+      min-width: 200px;
+    }
+    .weather-icon {
+      width: 80px;
+      height: 80px;
+    }
+    #forecastResults {
+      display: flex;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h2 class="mb-4 text-center">Tourist Weather Forecast</h2>
+    <form id="forecastForm" class="mb-4">
+      <div class="form-row">
+        <div class="form-group col-md-4">
+          <label for="destination">Travel Destination</label>
+          <input type="text" class="form-control" id="destination" placeholder="Enter destination" required>
+        </div>
+        <div class="form-group col-md-3">
+          <label for="startDate">Start Date</label>
+          <input type="date" class="form-control" id="startDate" required>
+        </div>
+        <div class="form-group col-md-3">
+          <label for="endDate">End Date</label>
+          <input type="date" class="form-control" id="endDate" required>
+        </div>
+        <div class="form-group col-md-2 align-self-end">
+          <button type="submit" class="btn btn-primary btn-block">Get Forecast</button>
+        </div>
+      </div>
+    </form>
+
+    <hr>
+    <h3 class="mb-3 text-center" id="destinationTitle"></h3>
+    <div id="forecastResults"></div>
+  </div>
+
+  <!-- jQuery and Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // IMPORTANT: Do not share your API key publicly.
+    // In production, move API calls to your server to protect your API key.
+    const API_KEY = "3df0619b415ce8193a326e10883d001e";
+
+    // Helper function: convert date to YYYY-MM-DD string
+    function formatDate(date) {
+      let d = new Date(date),
+          month = '' + (d.getMonth() + 1),
+          day = '' + d.getDate(),
+          year = d.getFullYear();
+      if (month.length < 2) month = '0' + month;
+      if (day.length < 2) day = '0' + day;
+      return [year, month, day].join('-');
+    }
+
+    // Group forecast items by date (YYYY-MM-DD)
+    function groupByDate(forecastList) {
+      const grouped = {};
+      forecastList.forEach(item => {
+        const dateStr = item.dt_txt.split(" ")[0];
+        if (!grouped[dateStr]) {
+          grouped[dateStr] = [];
+        }
+        grouped[dateStr].push(item);
+      });
+      return grouped;
+    }
+
+    // Process forecast data for one day to extract desired parameters and representative icon
+    function processDailyData(items) {
+      let maxTemp = -Infinity, minTemp = Infinity, humiditySum = 0, windSum = 0, count = 0, precipitation = 0;
+      let repIcon = items[0].weather[0].icon; // default icon
+
+      // Prefer the forecast closest to 12:00 if available
+      items.forEach(item => {
+        const hour = new Date(item.dt_txt).getHours();
+        if (hour === 12) {
+          repIcon = item.weather[0].icon;
+        }
+        const tempMax = item.main.temp_max;
+        const tempMin = item.main.temp_min;
+        maxTemp = Math.max(maxTemp, tempMax);
+        minTemp = Math.min(minTemp, tempMin);
+        humiditySum += item.main.humidity;
+        windSum += item.wind.speed;
+        count++;
+
+        if (item.rain && item.rain["3h"]) {
+          precipitation += item.rain["3h"];
+        }
+        if (item.snow && item.snow["3h"]) {
+          precipitation += item.snow["3h"];
+        }
+      });
+      return {
+        maxTemp: Math.round(maxTemp),
+        minTemp: Math.round(minTemp),
+        avgHumidity: Math.round(humiditySum / count),
+        avgWindSpeed: (windSum / count).toFixed(1),
+        precipitation: precipitation.toFixed(1),
+        icon: repIcon
+      };
+    }
+
+    // Determine status based on the day's weather
+    function getStatus(maxTemp) {
+      if (maxTemp > 40) {
+        return {
+          message: "Heatwave Warning – Not Suitable for going out",
+          dotClass: "dot-red"
+        };
+      } else {
+        return {
+          message: "Clear – Suitable for going out",
+          dotClass: "dot-green"
+        };
+      }
+    }
+
+    // On form submission
+    $("#forecastForm").on("submit", function(e) {
+      e.preventDefault();
+      $("#forecastResults").empty();
+
+      const destination = $("#destination").val().trim();
+      const startDate = $("#startDate").val();
+      const endDate = $("#endDate").val();
+
+      if (startDate > endDate) {
+        alert("Start date cannot be after end date.");
+        return;
+      }
+
+      // Get coordinates for the destination using the Geocoding API
+      $.ajax({
+        url: `https://api.openweathermap.org/geo/1.0/direct?q=${destination}&limit=1&appid=${API_KEY}`,
+        method: "GET",
+        success: function(geoData) {
+          if (!geoData || geoData.length === 0) {
+            $("#forecastResults").html("<p>Destination not found. Please check the name and try again.</p>");
+            return;
+          }
+          const { lat, lon, name, country } = geoData[0];
+          $("#destinationTitle").html(`Weather forecast for ${name}, ${country} from ${startDate} to ${endDate}`);
+
+          // Get the forecast data using the Forecast API (5 day / 3-hour interval)
+          $.ajax({
+            url: `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`,
+            method: "GET",
+            success: function(forecastData) {
+              const groupedData = groupByDate(forecastData.list);
+              let currentDate = new Date(startDate);
+              const lastDate = new Date(endDate);
+
+              // Create a tile for each day in the specified range
+              while (currentDate <= lastDate) {
+                const dateStr = formatDate(currentDate);
+                let tileContent = `<div class="forecast-tile">`;
+
+                if (groupedData[dateStr]) {
+                  const dailyData = processDailyData(groupedData[dateStr]);
+                  const status = getStatus(dailyData.maxTemp);
+                  tileContent += `
+                    <h5>${dateStr}</h5>
+                    <img class="weather-icon" src="https://openweathermap.org/img/wn/${dailyData.icon}@2x.png" alt="Weather Icon">
+                    <p>
+                      <strong>Max:</strong> ${dailyData.maxTemp}&deg;C<br>
+                      <strong>Min:</strong> ${dailyData.minTemp}&deg;C<br>
+                      <strong>Humidity:</strong> ${dailyData.avgHumidity}%<br>
+                      <strong>Precip:</strong> ${dailyData.precipitation} mm<br>
+                      <strong>Wind:</strong> ${dailyData.avgWindSpeed} m/s<br>
+                      <span class="status-dot ${status.dotClass}"></span>
+                      <small>${status.message}</small>
+                    </p>
+                  `;
+                } else {
+                  tileContent += `<h5>${dateStr}</h5><p>Forecast not available.</p>`;
+                }
+                tileContent += `</div>`;
+                $("#forecastResults").append(tileContent);
+                currentDate.setDate(currentDate.getDate() + 1);
+              }
+            },
+            error: function() {
+              $("#forecastResults").html("<p>Error retrieving forecast data. Please try again later.</p>");
+            }
+          });
+        },
+        error: function() {
+          $("#forecastResults").html("<p>Error retrieving location data. Please check the destination and try again.</p>");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

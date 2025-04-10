@@ -1,0 +1,57 @@
+{% extends "index.html" %}
+
+{%block title%}SignUp {%endblock%}
+
+{% block jqueryOp %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var divMain = $('#registrationpage')
+        var divform = $("#registrationform")
+        divMain.attr("id", "registrationpage").addClass("container responsive")
+        let h1 = document.createElement("h1")
+        $("h1").attr("class", "mt-5 text-center text-primary")
+        $("h1").text("Registration Form")
+        $(divMain).append(h1)
+    })
+</script>
+{% endblock%}
+
+{%block content%}
+<div id="registrationform">
+    <article id="registrationpage">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="firstname" class="form-label">{{registerDetails.firstName.label}}</label>
+                {{registerDetails.firstName}}
+            </div>
+            <div class="mb-3">
+                <label for="lastname" class="form-label">{{registerDetails.lastName.label}}</label>
+                {{registerDetails.lastName}}
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">{{registerDetails.userEmail.label}}</label>
+                {{registerDetails.userEmail}}
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">{{registerDetails.userPswd.label}}</label>
+                {{registerDetails.userPswd}}
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">{{registerDetails.gender.label}}</label>
+                {% for gen in registerDetails.gender %}
+                    {{gen}}
+                {%endfor%}
+            </div>
+            <div class="mb-3">
+                <label for="phno" class="form-label">{{registerDetails.phoneNumber.label}}</label>
+                {{registerDetails.phoneNumber}}
+            </div>
+            <div class="mb-3 btnPlus">
+                <button type="submit" class="btn btn-primary">Register</button>
+            </div>
+        </form>
+    </article>
+</div>
+{%endblock%}

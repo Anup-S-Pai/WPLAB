@@ -1,0 +1,52 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg mb-5">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="../static/images/favicon-32x32.png">
+            <img src="{% static 'images/favicon-32x32.png' %}" alt="TravelHub">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarScroll"
+            aria-controls="navbarScroll" aria-expanded="false">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarScroll">
+            <ul class="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
+                <li class="nav-item">
+                    <a class="nav-link" aria-current="page" href="{% url 'wander:homePage' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'wander:aboutPage' %}">About</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarScrollingDropdown" role="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        Contact Us
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
+                        <li><a class="dropdown-item nav-link" href="{% url 'prayaana:districtPage' %}">Tourist Places</a></li>
+                        {% if request.user.is_authenticated %}
+                            <li><a class="dropdown-item nav-link" href="{% url 'wander:feedbackPage' %}">Feedback Form</a></li>
+                        {% endif %}
+                        {% if request.user.is_authenticated and request.user.is_superuser %}
+                            <li><a class="dropdown-item nav-link" href="admin/">Admin DashBoard</a></li>
+                            <li><a class="dropdown-item nav-link" href="{% url 'prayaana:addPlace' %}">Tourist DashBoard</a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+                {% if not request.user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'wander:loginPage' %}">Login</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'wander:logoutPage' %}">Logout</a>
+                </li>
+                {% endif %}
+            </ul>
+            <!-- Search form directing to weather view -->
+            <form action="{% url 'wander:weatherForecast' %}" method="get" class="d-flex justify-content-around">
+                <input name="destination" class="form-control me-2" type="search" placeholder="Enter destination" aria-label="Search">
+                <button class="btn btn-outline-warning" type="submit">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>

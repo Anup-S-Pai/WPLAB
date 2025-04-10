@@ -1,0 +1,40 @@
+{% extends "travel/index.html" %}
+
+{%block title%}Login{%endblock%}
+
+{% block jqueryOp %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        var divMain = $('#loginpage')
+        var divform = $("#loginform")
+        divMain.attr("id","loginpage").addClass("container responsive")
+        let h1 = document.createElement("h1")
+        $(h1).attr("class","mt-5 text-center text-primary")
+        $(h1).text("Login Form")
+        $(divMain).before(h1)
+    })
+</script>
+{% endblock%}
+
+{%block content%}
+<div id="loginform">
+    <article id="loginpage">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="useremail" class="form-label">{{loginDetails.userEmail.label}}</label>
+                {{loginDetails.userEmail}}
+            </div>
+            <div class="mb-3">
+                <label for="userpswd" class="form-label">{{loginDetails.userPswd.label}}</label>
+                {{loginDetails.userPswd}}
+            </div>
+            <div class="mb-3 btnPlus">
+                <button type="submit" class="btn btn-primary">Login</button>
+               <div class="mb-3"> Dont have an account? <a href="{% url 'wander:registerPage' %}">SignUp</a></div>
+            </div>
+        </form>
+    </article>
+</div>
+{%endblock%}
